@@ -318,6 +318,9 @@ func (p *JsonLoggerConfig) Monitor() {
 	cronTab.AddFunc("*/5 * * * * ?", p.tab1)
 	cronTab.AddFunc("0 0 1 * * ?", p.DeleteLogFile)
 	cronTab.Run()
+	select {
+
+	}
 }
 
 // IsExist is a method to check if the log file exists.
