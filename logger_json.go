@@ -317,7 +317,7 @@ func (p *JsonLoggerConfig) Monitor() {
 	cronTab := cron.New()
 	cronTab.AddFunc("*/5 * * * * ?", p.tab1)
 	cronTab.AddFunc("0 0 1 * * ?", p.DeleteLogFile)
-	cronTab.Run()
+	cronTab.Start()
 	select {
 
 	}
