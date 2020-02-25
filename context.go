@@ -7,6 +7,7 @@ package gin
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"io"
 	"io/ioutil"
 	"math"
@@ -19,8 +20,8 @@ import (
 	"time"
 
 	"github.com/gin-contrib/sse"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/gin/render"
+	"github.com/ptechen/gin/binding"
+	"github.com/ptechen/gin/render"
 )
 
 // Content-Type MIME of the most common data formats.
@@ -33,7 +34,7 @@ const (
 	MIMEPOSTForm          = binding.MIMEPOSTForm
 	MIMEMultipartPOSTForm = binding.MIMEMultipartPOSTForm
 	MIMEYAML              = binding.MIMEYAML
-	BodyBytesKey          = "_gin-gonic/gin/bodybyteskey"
+	BodyBytesKey          = "_ptechen/gin/bodybyteskey"
 )
 
 const abortIndex int8 = math.MaxInt8 / 2
@@ -67,6 +68,9 @@ type Context struct {
 	// formCache use url.ParseQuery cached PostForm contains the parsed form data from POST, PATCH,
 	// or PUT body parameters.
 	formCache url.Values
+
+	// Logger is add zerolog support to output a more elegant json log format.
+	Logger zerolog.Logger
 }
 
 /************************************/
