@@ -100,7 +100,7 @@ type JsonLoggerConfig struct {
 // By default gin.DefaultWriter = os.Stdout.
 func JsonLogger() HandlerFunc {
 	return JsonLoggerWithConfig(JsonLoggerConfig{
-		LogColor: true,
+		LogColor:  true,
 		IsConsole: true,
 	})
 }
@@ -130,9 +130,8 @@ func JsonLoggerWithConfig(conf JsonLoggerConfig) HandlerFunc {
 
 	once.Do(func() {
 		conf.InitLogConfig()
-		go func() {
-			conf.Monitor()
-		}()
+
+		conf.Monitor()
 
 		notLogged := conf.SkipPaths
 		length := len(notLogged)
@@ -214,7 +213,7 @@ func (p *JsonLoggerConfig) setCaller() {
 	}
 }
 
-func (p *JsonLoggerConfig) ReCreateLogFile()  {
+func (p *JsonLoggerConfig) ReCreateLogFile() {
 	f, _ := os.OpenFile(p.logFilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	p.Output = f
 }
@@ -318,9 +317,6 @@ func (p *JsonLoggerConfig) Monitor() {
 	cronTab.AddFunc("*/5 * * * * ?", p.tab1)
 	cronTab.AddFunc("0 0 1 * * ?", p.DeleteLogFile)
 	cronTab.Start()
-	select {
-
-	}
 }
 
 // IsExist is a method to check if the log file exists.
