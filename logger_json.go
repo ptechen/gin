@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/ptechen/encoding"
-	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/diode"
 	"github.com/rs/zerolog/log"
@@ -313,10 +312,16 @@ func (p *JsonLoggerConfig) Monitor() {
 	if p.logFilePath == "" || p.logName == "" {
 		return
 	}
-	cronTab := cron.New()
-	cronTab.AddFunc("*/5 * * * * ?", p.tab1)
-	cronTab.AddFunc("0 0 1 * * ?", p.DeleteLogFile)
-	cronTab.Start()
+	secondsTicker := time.NewTicker(time.Second * 3)
+	dayTicker := time.NewTicker(time.Hour * 24)
+	for {
+		select {
+		case <- secondsTicker.C:
+			p.tab1()
+		case <- dayTicker.C:
+			p.DeleteLogFile()
+		}
+	}
 }
 
 // IsExist is a method to check if the log file exists.
