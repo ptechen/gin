@@ -99,7 +99,10 @@ type JsonLoggerConfig struct {
 // JsonLogger instances a Logger middleware that will write the logs to gin.DefaultWriter.
 // By default gin.DefaultWriter = os.Stdout.
 func JsonLogger() HandlerFunc {
-	return JsonLoggerWithConfig(JsonLoggerConfig{})
+	return JsonLoggerWithConfig(JsonLoggerConfig{
+		LogColor: true,
+		IsConsole: true,
+	})
 }
 
 var once sync.Once
@@ -211,6 +214,11 @@ func (p *JsonLoggerConfig) setCaller() {
 	}
 }
 
+func (p *JsonLoggerConfig) ReCreateLogFile()  {
+	f, _ := os.OpenFile(p.logFilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	p.Output = f
+}
+
 // SetOutput is a method to set the log output path.
 func (p *JsonLoggerConfig) SetOutput() {
 	if p.IsConsole && p.LogColor {
@@ -241,16 +249,21 @@ func (p *JsonLoggerConfig) CheckLogWriteSize() {
 
 // SetLogFileSize is a method for setting a limit on the size of a log file.
 func (p *JsonLoggerConfig) SetLogFileSize() {
-	if !strings.Contains(p.LogLimitSize, "G") && !strings.Contains(p.LogLimitSize, "MB") {
+	if !strings.Contains(p.LogLimitSize, "G") &&
+		!strings.Contains(p.LogLimitSize, "MB") &&
+		!strings.Contains(p.LogLimitSize, "KB") {
 		p.LogLimitSize = "1G"
 	}
 
 	if strings.Contains(p.LogLimitSize, "G") {
 		n, _ := strconv.Atoi(strings.Split(p.LogLimitSize, "G")[0])
 		p.logLimitNums = int64(n) * 1024 * 1024 * 1024
-	} else {
+	} else if strings.Contains(p.LogLimitSize, "KB") {
 		n, _ := strconv.Atoi(strings.Split(p.LogLimitSize, "MB")[0])
 		p.logLimitNums = int64(n) * 1024 * 1024
+	} else {
+		n, _ := strconv.Atoi(strings.Split(p.LogLimitSize, "KB")[0])
+		p.logLimitNums = int64(n) * 1024
 	}
 }
 
@@ -283,6 +296,7 @@ func parseFileInfo(fileInfo string) (logDir, logName string) {
 }
 
 func (p *JsonLoggerConfig) tab1() {
+	logger.Info().Msg("tab1")
 	isExist := p.IsExist()
 	if !isExist {
 		p.SetOutput()
@@ -290,6 +304,7 @@ func (p *JsonLoggerConfig) tab1() {
 	size := p.CheckFileSize()
 	if size > p.logLimitNums {
 		p.Rename2File()
+		p.ReCreateLogFile()
 		p.SetOutput()
 	}
 }
@@ -333,6 +348,7 @@ func (p *JsonLoggerConfig) Rename2File() (newLogFileName string) {
 
 // DeleteLogFile is a method for deleting log files.
 func (p *JsonLoggerConfig) DeleteLogFile() {
+	logger.Info().Msg("tab1")
 	files, _ := ioutil.ReadDir(p.logDir)
 	for _, file := range files {
 		if !file.IsDir() {
