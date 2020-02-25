@@ -193,7 +193,7 @@ func TestJsonLoggerConfig_Monitor(t *testing.T) {
 func TestJsonLoggerConfig_SetFilePath2FileName(t *testing.T) {
 	f, _ := os.Create("gin.log")
 	conf := &JsonLoggerConfig{Output: f}
-	conf.SetFilePath2FileName()
+	conf.setFilePath2FileName()
 	if conf.logDir != "./" || conf.logName != "gin.log" {
 		t.Error("SetFilePath2FileName is failing")
 	}
@@ -201,9 +201,9 @@ func TestJsonLoggerConfig_SetFilePath2FileName(t *testing.T) {
 
 func TestJsonLoggerConfig_Rename2File(t *testing.T) {
 	conf := JsonLoggerConfig{logFilePath: "gin.log"}
-	fileName := conf.Rename2File()
+	fileName := conf.rename2File()
 	conf.logFilePath = fileName
-	if !conf.IsExist() {
+	if !conf.isExist() {
 		t.Error("Rename2File is failing")
 	}
 }
@@ -215,12 +215,12 @@ func TestJsonLoggerConfig_DeleteLogFile(t *testing.T) {
 	_, _ = os.Create("gin.log.2018-01-01 01:01:01")
 	time.Sleep(time.Second)
 	conf := JsonLoggerConfig{LogExpDays: 30, logName: "gin.log", logDir: "./"}
-	conf.DeleteLogFile()
+	conf.deleteLogFile()
 }
 
 func TestJsonLoggerConfig_CheckFileSize(t *testing.T) {
 	conf := &JsonLoggerConfig{logFilePath: "./logger_json_test.go"}
-	if conf.CheckFileSize() == 0 {
+	if conf.checkFileSize() == 0 {
 		t.Error("CheckFileSize is failing")
 	}
 }
@@ -237,7 +237,7 @@ func TestJsonLoggerConfig_InitLogConfig(t *testing.T) {
 
 func TestJsonLoggerConfig_CheckLogExpDays(t *testing.T) {
 	conf := &JsonLoggerConfig{}
-	conf.CheckLogExpDays()
+	conf.checkLogExpDays()
 	if conf.LogExpDays != 30 {
 		t.Error("CheckLogExpDays is failing")
 	}
@@ -246,7 +246,7 @@ func TestJsonLoggerConfig_CheckLogExpDays(t *testing.T) {
 func TestJsonLoggerConfig_SetLoglevel(t *testing.T) {
 	conf := &JsonLoggerConfig{LogLevel: -2}
 	logger = &log.Logger
-	conf.SetLoglevel()
+	conf.setLoglevel()
 	if conf.LogLevel != 0 {
 		t.Error("SetLoglevel is failing")
 	}
@@ -254,7 +254,7 @@ func TestJsonLoggerConfig_SetLoglevel(t *testing.T) {
 
 func TestJsonLoggerConfig_CheckLogWriteSize(t *testing.T) {
 	conf := &JsonLoggerConfig{}
-	conf.CheckLogWriteSize()
+	conf.checkLogWriteSize()
 	if conf.LogWriteSize != 1000 {
 		t.Error("SetLogWriteSize is failing")
 	}
@@ -262,13 +262,13 @@ func TestJsonLoggerConfig_CheckLogWriteSize(t *testing.T) {
 
 func TestJsonLoggerConfig_SetLogFileSize(t *testing.T) {
 	conf := &JsonLoggerConfig{LogLimitSize: "1G"}
-	conf.SetLogFileSize()
+	conf.setLogFileSize()
 	if conf.logLimitNums != 1024*1024*1024 {
 		t.Error("TestJsonLoggerConfig is failing")
 	}
 
 	conf = &JsonLoggerConfig{LogLimitSize: "512MB"}
-	conf.SetLogFileSize()
+	conf.setLogFileSize()
 	if conf.logLimitNums != 512*1024*1024 {
 		t.Error("TestJsonLoggerConfig is failing")
 	}
@@ -276,7 +276,7 @@ func TestJsonLoggerConfig_SetLogFileSize(t *testing.T) {
 
 func TestJsonLoggerConfig_IsExist(t *testing.T) {
 	conf := &JsonLoggerConfig{logFilePath: "logger_json_test.go"}
-	if !conf.IsExist() {
+	if !conf.isExist() {
 		t.Error("logger_json_test.go is not exist")
 	}
 }

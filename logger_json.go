@@ -130,7 +130,7 @@ func JsonLoggerWithConfig(conf JsonLoggerConfig) HandlerFunc {
 	once.Do(func() {
 		conf.InitLogConfig()
 
-		conf.Monitor()
+		conf.monitor()
 
 		notLogged := conf.SkipPaths
 		length := len(notLogged)
@@ -197,13 +197,13 @@ func JsonLoggerWithConfig(conf JsonLoggerConfig) HandlerFunc {
 func (p *JsonLoggerConfig) InitLogConfig() {
 	logger = &log.Logger
 	zerolog.TimeFieldFormat = p.LogTimeFieldFormat
-	p.SetFilePath2FileName()
-	p.SetLogFileSize()
-	p.SetLoglevel()
-	p.CheckLogExpDays()
+	p.setFilePath2FileName()
+	p.setLogFileSize()
+	p.setLoglevel()
+	p.checkLogExpDays()
 	p.setCaller()
-	p.CheckLogWriteSize()
-	p.SetOutput()
+	p.checkLogWriteSize()
+	p.setOutput()
 }
 
 func (p *JsonLoggerConfig) setCaller() {
@@ -212,13 +212,13 @@ func (p *JsonLoggerConfig) setCaller() {
 	}
 }
 
-func (p *JsonLoggerConfig) ReCreateLogFile() {
+func (p *JsonLoggerConfig) reCreateLogFile() {
 	f, _ := os.OpenFile(p.logFilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	p.Output = f
 }
 
 // SetOutput is a method to set the log output path.
-func (p *JsonLoggerConfig) SetOutput() {
+func (p *JsonLoggerConfig) setOutput() {
 	if p.IsConsole && p.LogColor {
 		p.Output = zerolog.ConsoleWriter{Out: p.Output}
 	}
@@ -231,7 +231,7 @@ func (p *JsonLoggerConfig) SetOutput() {
 }
 
 // SetLoglevel is a method to set the alarm level for checking logs.
-func (p *JsonLoggerConfig) SetLoglevel() {
+func (p *JsonLoggerConfig) setLoglevel() {
 	if p.LogLevel < -1 || p.LogLevel > 7 {
 		p.LogLevel = 0
 	}
@@ -239,14 +239,14 @@ func (p *JsonLoggerConfig) SetLoglevel() {
 }
 
 // CheckLogWriteSize is a method to set the default log write channel size.
-func (p *JsonLoggerConfig) CheckLogWriteSize() {
+func (p *JsonLoggerConfig) checkLogWriteSize() {
 	if p.LogWriteSize < 1000 {
 		p.LogWriteSize = 1000
 	}
 }
 
 // SetLogFileSize is a method for setting a limit on the size of a log file.
-func (p *JsonLoggerConfig) SetLogFileSize() {
+func (p *JsonLoggerConfig) setLogFileSize() {
 	if !strings.Contains(p.LogLimitSize, "G") &&
 		!strings.Contains(p.LogLimitSize, "MB") &&
 		!strings.Contains(p.LogLimitSize, "KB") {
@@ -256,7 +256,7 @@ func (p *JsonLoggerConfig) SetLogFileSize() {
 	if strings.Contains(p.LogLimitSize, "G") {
 		n, _ := strconv.Atoi(strings.Split(p.LogLimitSize, "G")[0])
 		p.logLimitNums = int64(n) * 1024 * 1024 * 1024
-	} else if strings.Contains(p.LogLimitSize, "KB") {
+	} else if strings.Contains(p.LogLimitSize, "MB") {
 		n, _ := strconv.Atoi(strings.Split(p.LogLimitSize, "MB")[0])
 		p.logLimitNums = int64(n) * 1024 * 1024
 	} else {
@@ -266,14 +266,14 @@ func (p *JsonLoggerConfig) SetLogFileSize() {
 }
 
 // CheckLogExpDays is a method to check if the log file has an expiration time set.
-func (p *JsonLoggerConfig) CheckLogExpDays() {
+func (p *JsonLoggerConfig) checkLogExpDays() {
 	if p.LogExpDays == 0 {
 		p.LogExpDays = 30
 	}
 }
 
 // SetFilePath2FileName is a method for the path and name of the log file.
-func (p *JsonLoggerConfig) SetFilePath2FileName() {
+func (p *JsonLoggerConfig) setFilePath2FileName() {
 	data, ok := p.Output.(*os.File)
 	if ok && !p.IsConsole {
 		p.logFilePath = data.Name()
@@ -293,45 +293,45 @@ func parseFileInfo(fileInfo string) (logDir, logName string) {
 	return
 }
 
-func (p *JsonLoggerConfig) tab1() {
-	logger.Info().Msg("tab1")
-	isExist := p.IsExist()
+func (p *JsonLoggerConfig) minuteTicker() {
+	isExist := p.isExist()
 	if !isExist {
-		p.SetOutput()
+		p.reCreateLogFile()
+		p.setOutput()
 	}
-	size := p.CheckFileSize()
+	size := p.checkFileSize()
 	if size > p.logLimitNums {
-		p.Rename2File()
-		p.ReCreateLogFile()
-		p.SetOutput()
+		p.rename2File()
+		p.reCreateLogFile()
+		p.setOutput()
 	}
 }
 
 // Monitor is a method of monitoring log files.
-func (p *JsonLoggerConfig) Monitor() {
+func (p *JsonLoggerConfig) monitor() {
 	if p.logFilePath == "" || p.logName == "" {
 		return
 	}
-	secondsTicker := time.NewTicker(time.Second * 3)
+	MinuteTicker := time.NewTicker(time.Minute)
 	dayTicker := time.NewTicker(time.Hour * 24)
 	for {
 		select {
-		case <- secondsTicker.C:
-			p.tab1()
+		case <- MinuteTicker.C:
+			p.minuteTicker()
 		case <- dayTicker.C:
-			p.DeleteLogFile()
+			p.deleteLogFile()
 		}
 	}
 }
 
 // IsExist is a method to check if the log file exists.
-func (p *JsonLoggerConfig) IsExist() bool {
+func (p *JsonLoggerConfig) isExist() bool {
 	_, err := os.Stat(p.logFilePath)
 	return err == nil || os.IsExist(err)
 }
 
 // CheckFileSize is a method for checking the size of a log file.
-func (p *JsonLoggerConfig) CheckFileSize() int64 {
+func (p *JsonLoggerConfig) checkFileSize() int64 {
 	f, e := os.Stat(p.logFilePath)
 	if e != nil {
 		return 0
@@ -340,7 +340,7 @@ func (p *JsonLoggerConfig) CheckFileSize() int64 {
 }
 
 // Rename2File is a method for renaming log files.
-func (p *JsonLoggerConfig) Rename2File() (newLogFileName string) {
+func (p *JsonLoggerConfig) rename2File() (newLogFileName string) {
 	now := time.Now()
 	newLogFileName = fmt.Sprintf("%s.%s", p.logFilePath, now.Format("2006-01-02 15:04:05"))
 	err := os.Rename(p.logFilePath, newLogFileName)
@@ -351,7 +351,7 @@ func (p *JsonLoggerConfig) Rename2File() (newLogFileName string) {
 }
 
 // DeleteLogFile is a method for deleting log files.
-func (p *JsonLoggerConfig) DeleteLogFile() {
+func (p *JsonLoggerConfig) deleteLogFile() {
 	logger.Info().Msg("tab1")
 	files, _ := ioutil.ReadDir(p.logDir)
 	for _, file := range files {
